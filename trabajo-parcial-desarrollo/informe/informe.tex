@@ -31,7 +31,7 @@
 % Figura de la simulación: si el PNG aún no existe, deja un recuadro.
 \newcommand{\figsim}[2]{%
   \IfFileExists{../matlab/figuras/#1.png}%
-    {\includegraphics[width=\linewidth]{#1}}%
+    {\includegraphics[width=0.78\linewidth]{#1}}%
     {\fbox{\parbox[c][4cm][c]{0.9\linewidth}{\centering\small
       Ejecutar \texttt{simular\_parcial} en MATLAB: genera\\
       \texttt{matlab/figuras/\detokenize{#1}.png}}}}%
@@ -325,55 +325,55 @@ En cambio, la columna teórica del artículo no se obtiene con \(l_2=0{,}29\)~m.
 
 Las figuras siguientes las genera el script \texttt{simular\_parcial.m}, que las guarda en la carpeta \texttt{matlab/figuras/}.
 
-\begin{figure}[p]
+\begin{figure}[htbp]
 \centering
 \figsim{01_cadena_en_la_postura_de_prueba}{Cinemática directa: base, articulaciones y punta en \(q=(0{,}4;\,0{,}7;\,-0{,}8)\)~rad.}
 \label{fig:cadsim}
 \end{figure}
 
-\begin{figure}[p]
+\begin{figure}[htbp]
 \centering
 \figsim{02_espacio_de_trabajo}{Espacio de trabajo 3D y corte \(x=0\), para comparar con las Figuras~4 y~5 de Ramzy et al. (2024).}
 \label{fig:ws}
 \end{figure}
 
-\begin{figure}[p]
+\begin{figure}[htbp]
 \centering
 \figsim{03_singularidades}{Mapa de \(\det J(q_2,q_3)\), con las singularidades en rojo, y manipulabilidad sobre la trayectoria quíntica.}
 \label{fig:sing}
 \end{figure}
 
-\begin{figure}[p]
+\begin{figure}[htbp]
 \centering
-\figsim{04_cinematica_diferencial}{Velocidad de la punta: \(J(q)\,\dot q\) y derivada numérica de la posición.}
+\figsim{04_cinematica_diferencial}{Velocidad de la punta: \(J(q)\,\dot q\) en color y derivada numérica de la posición en negro discontinuo; las curvas se superponen.}
 \label{fig:dif}
 \end{figure}
 
-\begin{figure}[p]
+\begin{figure}[htbp]
 \centering
 \figsim{05_validacion_tabla_3}{Validación contra la Tabla~3 del artículo: modelo frente a medición, y error por postura.}
 \label{fig:val}
 \end{figure}
 
-\begin{figure}[p]
+\begin{figure}[htbp]
 \centering
 \figsim{06_error_de_control}{Norma del error en el control de posición y en el seguimiento.}
 \label{fig:err}
 \end{figure}
 
-\begin{figure}[p]
+\begin{figure}[htbp]
 \centering
 \figsim{07_control_de_posicion}{Control de posición: cadena inicial, cadena final y camino de la punta.}
 \label{fig:pos}
 \end{figure}
 
-\begin{figure}[p]
+\begin{figure}[htbp]
 \centering
 \figsim{08_seguimiento}{Seguimiento cartesiano: referencia y trayectoria de la punta.}
 \label{fig:seg}
 \end{figure}
 
-\begin{figure}[p]
+\begin{figure}[htbp]
 \centering
 \figsim{09_interpolador_cubico}{Punto a punto articular: \(q(t)\) del polinomio cúbico y trayectoria resultante de la punta.}
 \label{fig:cub}
