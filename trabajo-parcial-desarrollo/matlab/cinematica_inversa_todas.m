@@ -18,8 +18,12 @@ for k = 1:4
         q = cinematica_inversa(xyz, p, codo, cintura);
         % Ángulos en (-pi, pi] para compararlos con los límites.
         Q(:, k) = atan2(sin(q), cos(q));
-    catch
-        % Punto fuera de alcance o sobre el eje de q1: queda NaN.
+    catch ME
+        % Solo estos dos casos significan "no hay solución" y dejan NaN.
+        % Cualquier otro error es un defecto y se relanza.
+        if ~any(strcmp(ME.identifier, {'robot:fueraAlcance', 'robot:ejeQ1'}))
+            rethrow(ME);
+        end
     end
 end
 end

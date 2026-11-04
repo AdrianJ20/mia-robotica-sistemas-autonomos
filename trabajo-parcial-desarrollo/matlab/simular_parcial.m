@@ -6,6 +6,7 @@
 clear
 close all
 clc
+figs = gobjects(0, 1);   % solo se exportan las figuras de este script
 
 p = parametros_robot();
 fprintf('Robot de Ramzy, Hammad y Maged (2024), Tabla 2.\n');
@@ -25,6 +26,9 @@ fprintf('q recuperado = [% .4f % .4f % .4f] rad\n\n', q_inv);
 
 %% Inversa: las cuatro soluciones del mismo punto
 [Q_sol, etiquetas] = cinematica_inversa_todas(xyz_m, p);
+if all(isnan(Q_sol(:)))
+    error('La punta de q de prueba es alcanzable y la inversa no dio ninguna solución.');
+end
 fprintf('Cuatro soluciones de la inversa para la punta de q de prueba:\n');
 for k = 1:4
     if any(isnan(Q_sol(:, k)))
@@ -216,7 +220,7 @@ fprintf('  alcance máximo desde la base = %.3f m (l1 + l2 + l3 = %.3f m)\n\n', 
 val = validar_tabla3(p);
 
 %% Esquemas
-figure('Name', 'Cadena en la postura de prueba')
+figs(end + 1) = figure('Name', 'Cadena en la postura de prueba');
 plot3(origenes(1, :), origenes(2, :), origenes(3, :), 'k-o', 'LineWidth', 2)
 hold on
 plot3(xyz_m(1), xyz_m(2), xyz_m(3), 'r*')
@@ -227,7 +231,7 @@ ylabel('y (m)')
 zlabel('z (m)')
 title('Directa: base, articulaciones y punta en q de prueba')
 
-figure('Name', 'Espacio de trabajo')
+figs(end + 1) = figure('Name', 'Espacio de trabajo');
 subplot(1, 2, 1)
 plot3(P_ws(1, :), P_ws(2, :), P_ws(3, :), 'b.', 'MarkerSize', 2)
 grid on
@@ -244,7 +248,7 @@ xlabel('y (m)')
 ylabel('z (m)')
 title('Corte x = 0 (comparar con Fig. 5)')
 
-figure('Name', 'Singularidades')
+figs(end + 1) = figure('Name', 'Singularidades');
 subplot(1, 2, 1)
 contourf(rad2deg(Q2m), rad2deg(Q3m), detJm, 20, 'LineStyle', 'none')
 hold on
@@ -260,7 +264,7 @@ xlabel('t (s)')
 ylabel('|det J|')
 title('Manipulabilidad sobre la trayectoria quíntica')
 
-figure('Name', 'Cinemática diferencial')
+figs(end + 1) = figure('Name', 'Cinemática diferencial');
 plot(t_dif, v_jac', 'LineWidth', 1.5)
 hold on
 plot(t_dif, v_num', 'k--')
@@ -270,7 +274,7 @@ ylabel('v (m/s)')
 title('Velocidad de la punta: J(q)·qp (color) y derivada numérica (negro)')
 legend('v_x', 'v_y', 'v_z', 'Location', 'best')
 
-figure('Name', 'Validación Tabla 3')
+figs(end + 1) = figure('Name', 'Validación Tabla 3');
 subplot(1, 2, 1)
 plot(val.experimental(:, 2), val.modelo(:, 2), 'bo', ...
      val.experimental(:, 3), val.modelo(:, 3), 'rs', ...
@@ -292,7 +296,7 @@ ylabel('Error (mm)')
 legend('vs experimental', 'vs teórica del artículo', 'Location', 'best')
 title('Error de posición por postura')
 
-figure('Name', 'Error de control')
+figs(end + 1) = figure('Name', 'Error de control');
 subplot(2, 1, 1)
 t_pos = (0:nfin - 1) * ts;
 semilogy(t_pos, vecnorm(objetivo - historia(:, 1:nfin)))
@@ -307,7 +311,7 @@ xlabel('t (s)')
 ylabel('||e|| (m)')
 title('Seguimiento: norma del error')
 
-figure('Name', 'Control de posición')
+figs(end + 1) = figure('Name', 'Control de posición');
 plot3(historia(1, 1:nfin), historia(2, 1:nfin), historia(3, 1:nfin), 'b')
 hold on
 [~, ~, cad0] = cinematica_directa(qs(:, 1), p);
@@ -323,7 +327,7 @@ zlabel('z (m)')
 title('Posición: cadena inicial, cadena final y camino de la punta')
 legend('punta', 'inicio', 'final', 'objetivo', 'Location', 'best')
 
-figure('Name', 'Seguimiento')
+figs(end + 1) = figure('Name', 'Seguimiento');
 plot3(hd(1, :), hd(2, :), hd(3, :), 'k--')
 hold on
 plot3(h(1, :), h(2, :), h(3, :), 'b')
@@ -335,7 +339,7 @@ zlabel('z (m)')
 title('Seguimiento: referencia punteada, punta en azul')
 legend('referencia', 'punta', 'Location', 'best')
 
-figure('Name', 'Interpolador cúbico')
+figs(end + 1) = figure('Name', 'Interpolador cúbico');
 subplot(2, 1, 1)
 plot(t_pol, q_cub')
 grid on
@@ -359,12 +363,12 @@ carpeta = 'figuras';
 if ~exist(carpeta, 'dir')
     mkdir(carpeta);
 end
-figs = findobj('Type', 'figure');
 for k = 1:numel(figs)
     nombre = lower(strrep(figs(k).Name, ' ', '_'));
     nombre = char(replace(nombre, ["á", "é", "í", "ó", "ú", "ñ"], ["a", "e", "i", "o", "u", "n"]));
     nombre = regexprep(nombre, '[^a-z0-9_]', '');
-    archivo = fullfile(carpeta, [nombre '.png']);
+    % El prefijo numérico ordena los anexos y evita choques de nombres.
+    archivo = fullfile(carpeta, sprintf('%02d_%s.png', k, nombre));
     if exist('exportgraphics', 'file')
         exportgraphics(figs(k), archivo, 'Resolution', 200);
     else
