@@ -1,38 +1,60 @@
-% SIMULAR_PARCIAL  Cinemática y control del antropomórfico de 3 GDL.
+% SIMULAR_PARCIAL  Cinemática y control del antropomórfico de Ramzy et al. (2024).
 % Sube esta carpeta a MATLAB Online y ejecuta: simular_parcial
 % No usa Robotics System Toolbox. El control sigue a la clase 7 (pinv y tanh).
+% Los largos son los de la Tabla 2: l1 = 0.04 m, l2 = 0.29 m, l3 = 0.240 m.
 
 clear
 close all
 clc
 
-p = parametros_comprobacion();
-fprintf('Longitudes de comprobación, no las del robot de la Tabla I.\n');
-fprintf('a1 = 0 y alpha = [pi/2, 0, 0] sí salen de esa tabla.\n\n');
+p = parametros_robot();
+fprintf('Robot de Ramzy, Hammad y Maged (2024), Tabla 2.\n');
+fprintf('l1 = %.3f m, l2 = %.3f m, l3 = %.3f m.\n\n', p.l1, p.l2, p.l3);
 
-%% Directa contra la ecuación (5), e inversa
-q_prueba = [0.3; 0.5; -0.8];
+%% Directa contra las ecuaciones (6)-(8), e inversa
+q_prueba = [0.4; 0.7; -0.8];
 [xyz_m, ~, origenes] = cinematica_directa(q_prueba, p);
-xyz_eq = posicion_ecuacion5(q_prueba, p);
-fprintf('Error directa DHL vs ecuación (5): %.3e m\n', norm(xyz_m - xyz_eq));
+xyz_eq = posicion_paper(q_prueba, p);
+fprintf('Error directa DHL vs ecuaciones (6)-(8): %.3e m\n', norm(xyz_m - xyz_eq));
 
 q_inv = cinematica_inversa(xyz_m, p, -1, 1);
 [xyz_vuelta, ~, ~] = cinematica_directa(q_inv, p);
 fprintf('Error inversa luego directa: %.3e m\n', norm(xyz_m - xyz_vuelta));
-fprintf('q pedido    = [% .4f % .4f % .4f] rad\n', q_prueba);
+fprintf('q pedido     = [% .4f % .4f % .4f] rad\n', q_prueba);
 fprintf('q recuperado = [% .4f % .4f % .4f] rad\n\n', q_inv);
 
-%% Singularidad: codo estirado y codo plegado
-q_reg = [0.3; 0.5; -0.8];
+%% La inversa impresa del paper, ecuaciones (9)-(12), no cierra esta directa
+x = xyz_eq(1);
+y = xyz_eq(2);
+z = xyz_eq(3);
+arg_paper = (x^2 + y^2 + z^2 - (p.l2^2) * (p.l3^2)) / (2 * p.l2 * p.l3);
+fprintf('Argumento del arccos de la ecuación (11) en este punto: %.3f\n', arg_paper);
+fprintf('Queda fuera de [-1, 1]. Esa inversa no se usa.\n\n');
+
+%% Singularidades: codo estirado, codo plegado, punta en el eje de q1
+q_reg = q_prueba;
 q_est = [0.2; 0.4; 0];
 q_ple = [0.2; 0.4; pi];
-fprintf('det J regular          = %.6f\n', det(jacobiano_posicion(q_reg, p)));
-fprintf('det J codo estirado    = %.3e\n', det(jacobiano_posicion(q_est, p)));
-fprintf('det J codo plegado     = %.3e\n\n', det(jacobiano_posicion(q_ple, p)));
+% A = l2*cos(q2)+l3*cos(q2+q3) = 0 con q2 = 2*pi/3, sin dejar q3 en 0 o pi.
+q2e = 2 * pi / 3;
+c23 = -(p.l2 / p.l3) * cos(q2e);
+q3e = acos(c23) - q2e;
+q_eje = [0.4; q2e; q3e];
+Areg = p.l2 * cos(q_reg(2)) + p.l3 * cos(q_reg(2) + q_reg(3));
+det_cerrado = -Areg * p.l2 * p.l3 * sin(q_reg(3));
+fprintf('det J regular              = %.6f\n', det(jacobiano_posicion(q_reg, p)));
+fprintf('det cerrado - det J        = %.3e\n', det_cerrado - det(jacobiano_posicion(q_reg, p)));
+fprintf('det J codo estirado        = %.3e\n', det(jacobiano_posicion(q_est, p)));
+fprintf('det J codo plegado         = %.3e\n', det(jacobiano_posicion(q_ple, p)));
+punta_eje = cinematica_directa(q_eje, p);
+fprintf('det J punta en el eje de q1 = %.3e\n', det(jacobiano_posicion(q_eje, p)));
+fprintf('sin(q3) en esa postura     = %.3f\n', sin(q_eje(3)));
+fprintf('punta en esa postura (m)   = [% .3e % .3e % .4f]\n\n', punta_eje);
 
 %% Control de posición. Ley de la clase 7: qp = pinv(J) * K * tanh(e), K = 8 I
-objetivo = [0.45; 0.15; 0.55];
-q = [0.2; 0.6; 0.7];
+q_meta = [0.4; 0.8; -0.7];
+objetivo = cinematica_directa(q_meta, p);
+q = [0.15; 0.55; -0.4];
 tf = 8;
 ts = 0.05;
 Kpos = 8 * eye(3);
@@ -62,40 +84,52 @@ if singular
     fprintf('Se detuvo: |det J| < 1e-4.\n');
 end
 
-%% Seguimiento. Ley de la clase 7: qp = pinv(J) * (hd_punto + K e), K = I
+%% Seguimiento cartesiano. Ley de la clase 7: qp = pinv(J) * (hd_punto + K e)
 tf2 = 20;
 ts2 = 0.05;
 t2 = 0:ts2:tf2;
 N2 = numel(t2);
+centro = cinematica_directa([0.5; 0.9; -0.8], p);
 hd = zeros(3, N2);
 hdp = zeros(3, N2);
 for k = 1:N2
     tk = t2(k);
-    hd(:, k) = [0.40 + 0.06 * cos(0.3 * tk); ...
-                0.12 + 0.06 * sin(0.3 * tk); ...
-                0.48 + 0.03 * sin(0.5 * tk)];
-    hdp(:, k) = [-0.06 * 0.3 * sin(0.3 * tk); ...
-                  0.06 * 0.3 * cos(0.3 * tk); ...
-                  0.03 * 0.5 * cos(0.5 * tk)];
+    hd(:, k) = centro + [0.03 * cos(0.3 * tk); ...
+                         0.03 * sin(0.3 * tk); ...
+                         0.02 * sin(0.5 * tk)];
+    hdp(:, k) = [-0.03 * 0.3 * sin(0.3 * tk); ...
+                  0.03 * 0.3 * cos(0.3 * tk); ...
+                  0.02 * 0.5 * cos(0.5 * tk)];
 end
-q = cinematica_inversa(hd(:, 1), p, 1, 1);
+q = cinematica_inversa(hd(:, 1), p, -1, 1);
 h = zeros(3, N2);
 h(:, 1) = cinematica_directa(q, p);
+singular_seg = false;
 for k = 1:N2 - 1
     e = hd(:, k) - h(:, k);
     J = jacobiano_posicion(q, p);
+    if abs(det(J)) < 1e-4
+        singular_seg = true;
+        h = h(:, 1:k);
+        hd = hd(:, 1:k);
+        break
+    end
     qp = pinv(J) * (hdp(:, k) + e);
     q = q + ts2 * qp;
     h(:, k + 1) = cinematica_directa(q, p);
 end
 err_seg = vecnorm(hd - h);
-fprintf('Seguimiento. Error máximo = %.4f m. Error final = %.3e m.\n\n', ...
+fprintf('Seguimiento. Error máximo = %.4e m. Error final = %.4e m.\n', ...
     max(err_seg), err_seg(end));
+if singular_seg
+    fprintf('El seguimiento se detuvo: |det J| < 1e-4.\n');
+end
+fprintf('\n');
 
-%% Interpoladores de la clase 6, en el espacio articular
+%% Punto a punto articular. Polinomios de la clase 6
 t_pol = 0:0.1:3;
-qi = cinematica_inversa([0.50; 0.10; 0.40], p, 1, 1);
-qf = cinematica_inversa([0.35; 0.20; 0.60], p, 1, 1);
+qi = cinematica_inversa(cinematica_directa([0.3; 0.6; -0.5], p), p, -1, 1);
+qf = cinematica_inversa(cinematica_directa([0.7; 1.0; -0.9], p), p, -1, 1);
 [q_cub, qp_cub, ~] = interpolador_articular(qi, qf, t_pol, "cubica");
 [~, ~, qpp_qui] = interpolador_articular(qi, qf, t_pol, "quintica");
 fprintf('Cúbica: velocidad inicial = %.3e, final = %.3e rad/s\n', ...
@@ -156,13 +190,12 @@ title('Punta al pasar el polinomio por la directa')
 fprintf('\nOrígenes de la cadena en q de prueba (columnas: base, 1, 2, punta):\n')
 disp(origenes)
 
-function xyz = posicion_ecuacion5(q, p)
-delta = p.d2 + p.d3;
+function xyz = posicion_paper(q, p)
 q1 = q(1);
 q2 = q(2);
 q3 = q(3);
-A = p.a3 * cos(q2 + q3) + p.a2 * cos(q2);
-xyz = [cos(q1) * A + delta * sin(q1); ...
-       sin(q1) * A - delta * cos(q1); ...
-       p.a3 * sin(q2 + q3) + p.a2 * sin(q2) + p.d1];
+A = p.l2 * cos(q2) + p.l3 * cos(q2 + q3);
+xyz = [cos(q1) * A; ...
+       sin(q1) * A; ...
+       p.l1 + p.l2 * sin(q2) + p.l3 * sin(q2 + q3)];
 end

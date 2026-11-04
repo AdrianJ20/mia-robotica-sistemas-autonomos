@@ -1,156 +1,68 @@
-# Trabajo parcial
+# Trabajo parcial — borrador
 
-Robot antropomórfico de 3 grados de libertad
+Carátula: UNI, nombre oficial de la maestría (todavía no está en los PDF del curso), logo, título Trabajo Parcial, autor, curso Robótica y sistemas autónomos, Ing. Wilson Dennis Reyes Vásquez, semestre 2026-2.
 
-Curso: Robótica y sistemas autónomos
-Docente: Ing. Wilson Dennis Reyes Vásquez
-Semestre: 2026-2
-Autor: [Apellidos, nombres]
-Maestría: [nombre oficial, no está en el enunciado]
+La opinión personal queda en preguntas. La escribe el autor.
 
-La carátula del PDF lleva el logotipo actual de la UNI. Este borrador no lo incluye.
+## Introducción
 
-## 1. Introducción
+Antropomórfico de tres rotativas: la primera alrededor de un eje vertical, las dos siguientes alrededor de ejes horizontales paralelos. La simulación en MATLAB cubre directa, inversa geométrica, jacobiano de la posición, singularidades y control cinemático.
 
-Un antropomórfico de tres grados de libertad tiene cintura, hombro y codo: la primera articulación gira alrededor de un eje vertical y las dos siguientes alrededor de ejes horizontales paralelos. Con eso la punta se mueve en el espacio, no en un solo plano. El trabajo simula, en MATLAB y con el método de las prácticas, la cinemática directa, la inversa, el jacobiano, las singularidades y el control cinemático de un robot real de esa arquitectura.
+El modelo es Ramzy, Hammad y Maged (2024), *Applied Sciences*, 14, 5285. El banco tiene eslabones de rigidez variable. Para la posición, el artículo lo trata como rígido y da la cadena de un antropomórfico. El parcial usa esa cadena y los largos de la Tabla 2. Resortes y amortiguadores no entran aquí.
 
-La pregunta que ordena el desarrollo es esta: si las prácticas resuelven un brazo de dos rotaciones y una prismática, ¿qué parte de ese procedimiento se mantiene cuando el robot pasa a ser el RRR de tres rotaciones, y qué parte hay que volver a escribir?
+## Desarrollo
 
-## 2. Desarrollo
+El brazo de la práctica es el RRP del G1: \(L_1 = 75\) mm, segunda distancia \(100\) mm, \(z = -d_3\). Este robot no es ese.
 
-### 2.1 Qué robot, y por qué no es el de la práctica
+Tabla 1: \(\alpha_1 = 90^\circ\), \(a_1 = 0\), \(d_1 = l_1\); luego \(\alpha = 0\), \(d = 0\), \(a = l_2\) y \(a = l_3\). Tabla 2: \(l_1 = 0{,}04\) m, \(l_2 = 0{,}29\) m, \(l_3 = 0{,}240\) m. La misma tabla trae masas, centros de masa y momentos principales; los productos de inercia se toman como cero. No se usan en esta simulación. \(k = 1{,}66\) y \(c = 1{,}3\) salen sin unidad y pertenecen al modelo flexible.
 
-Los live scripts de las clases 2, 3, 4 y 6 modelan un RRP. Las tres filas de Denavit–Hartenberg tienen twist nulo, las longitudes que aparecen son \(L_1=75\) y \(L_2=100\) sin unidad, y la tercera variable es el desplazamiento \(d_3\). Eso no es un antropomórfico.
+\(z_0\) apunta hacia arriba. \(d_2 = d_3 = 0\), así que \(q_1 = \operatorname{atan2}(p_y, p_x)\) cuando la cintura apunta al punto.
 
-El modelo que se simula es el RRR de accionamiento directo del laboratorio de Dynamics and Control de la Technische Universiteit Eindhoven, descrito por Kostić, Hensen, de Jager y Steinbuch (2002). El paper lo llama antropomórfico: cintura, hombro y codo. La Tabla I de ese artículo fija la cadena. En la página se lee \(a_1=0\), \(\alpha_1=\pi/2\), \(\alpha_2=0\), \(\alpha_3=0\), y el resto de longitudes y offsets como símbolos (\(C_0C_1\), \(P_1C_2\), \(C_1P_1\), \(P_2C_3\), \(C_2P_2\)). No hay metros en la tabla. El manual del mismo robot (van Beek, 1998) da 0,3 m para un eslabón virtual del extremo, con el brazo 3 sin montar, y no lo escribe como parámetro de Denavit–Hartenberg. Por eso la simulación separa dos cosas: la estructura, que es la del paper, y un juego de longitudes de comprobación, que no es el del robot. Esas longitudes están en `parametros_comprobacion.m` y el script lo imprime al arrancar.
-
-### 2.2 Cinemática directa
-
-Se usa la función `DHL` de la clase 2: rotación en \(z\), traslación \((a,0,d)\) y rotación en \(x\). La cadena es
-
-\[
-{}^{0}T_{3} = \mathrm{DHL}(q_1,d_1,0,\pi/2)\;\mathrm{DHL}(q_2,d_2,a_2,0)\;\mathrm{DHL}(q_3,d_3,a_3,0).
-\]
-
-La posición de la punta es la cuarta columna. Coincide con la ecuación (5) del paper:
+La directa es `DHL(q1, l1, 0, pi/2) * DHL(q2, 0, l2, 0) * DHL(q3, 0, l3, 0)`. La matriz (2) del PDF imprime en cero la fila que debe llevar el \(1\) de \(\sin 90^\circ\). No se copia. La posición que sí cierra es
 
 \[
 \begin{aligned}
-x &= \cos q_1\,(a_3\cos(q_2+q_3)+a_2\cos q_2)+(d_2+d_3)\sin q_1,\\
-y &= \sin q_1\,(a_3\cos(q_2+q_3)+a_2\cos q_2)-(d_2+d_3)\cos q_1,\\
-z &= a_3\sin(q_2+q_3)+a_2\sin q_2+d_1.
+p_x &= \cos q_1\,(l_2\cos q_2 + l_3\cos(q_2+q_3)),\\
+p_y &= \sin q_1\,(l_2\cos q_2 + l_3\cos(q_2+q_3)),\\
+p_z &= l_1 + l_2\sin q_2 + l_3\sin(q_2+q_3).
 \end{aligned}
 \]
 
-En la comprobación, para \(q=(0{,}3;\,0{,}5;\,-0{,}8)\) rad y las longitudes de prueba, la diferencia entre el producto de matrices y la ecuación (5) quedó en \(10^{-16}\) m. El signo de \(z\) es el de esa ecuación. No se arrastra el \(z=-d_3\) del jacobiano del RRP de la clase 4, porque ese menos pertenece a otro brazo.
-
-### 2.3 Cinemática inversa
-
-El método es el geométrico de la clase 3. En el SCARA llama codo abajo a la postura en que el codo queda abajo y codo arriba a la otra. El coseno no distingue el signo; el seno, sí. La ecuación (6) del paper está en una figura que no se lee completa, así que la inversa se dedujo de la (5) y se comprobó contra la directa.
-
-En la diapositiva del antropomórfico la trama raíz está arriba y la columna no entra: \(\theta_1=\operatorname{atan2}(p_y,p_x)\) y el codo se resuelve en el plano \(R\)–\(z\). Si la trama está abajo, la vertical es \(L_1\), los eslabones del brazo son \(L_2\) y \(L_3\), y la altura que usa es \(p_z-L_1\). En el tablero corrige \(D\) a \(R^2+p_z^2\); la transcripción no deja esa línea limpia y no se copió al código. La Tabla I de Kostić tiene offsets, así que ahí \(\theta_1\) no es ese arco tangente.
-
-Con \(\delta=d_2+d_3\) y \(\rho=\sqrt{x^2+y^2}\),
+En \(q = (0{,}4;\ 0{,}7;\ -0{,}8)\) rad el producto de matrices y esas ecuaciones coinciden. La columna teórica de la Tabla 3 queda unos milímetros más afuera; la simulación no la persigue y sigue (6)–(8) con la Tabla 2. La inversa geométrica, con el signo de \(\sin q_3\) de esa postura, devuelve el mismo \(q\). Las ecuaciones (9)–(12) del paper, en ese punto, piden un \(\cos^{-1}\) de \(1{,}785\) y no se usan.
 
 \[
-\sin(q_1-\varphi)=\delta/\rho, \qquad \varphi=\operatorname{atan2}(y,x).
+\det J = -A\, l_2\, l_3 \sin q_3, \qquad A = l_2\cos q_2 + l_3\cos(q_2+q_3).
 \]
 
-Hay dos \(q_1\). Para cada uno, la proyección del brazo en su plano es \(A=x\cos q_1+y\sin q_1\) y \(z'=z-d_1\). El codo sale de la ley del coseno,
+En la postura de prueba, \(\det J = 0{,}0230\). Se anula con \(q_3 = 0\), con \(q_3 = \pi\) y con \(A = 0\) (punta en el eje de \(q_1\)). El script arma esta última con \(q_2 = 2\pi/3\) y el \(q_3\) que anula \(A\): \(\sin q_3\) no es cero y el determinante sí.
 
-\[
-\cos q_3=\frac{A^2+z'^2-a_2^2-a_3^2}{2 a_2 a_3},
-\]
+El punto a punto articular usa la cúbica y la quíntica de la clase 6, \(t_f = 3\) s, reposo a reposo, entre \((0{,}3;\ 0{,}6;\ -0{,}5)\) y \((0{,}7;\ 1{,}0;\ -0{,}9)\) rad.
 
-y \(\sin q_3\) lleva el signo del codo, como el \(\pm\sqrt{1-C^2}\) del live script de inversa. Si \(\rho<|\delta|\) o \(|\cos q_3|>1\), el punto está fuera de alcance.
+El control cartesiano es el de la clase 7. Posición: \(K = 8I\), \(\dot q = J^{+} K \tanh(e)\), objetivo \((0{,}406;\ 0{,}172;\ 0{,}272)\) m desde \(q = (0{,}15;\ 0{,}55;\ -0{,}4)\). Error final del orden de \(10^{-16}\) m. Seguimiento: \(K = I\), \(\dot q = J^{+}(\dot h_d + e)\), alrededor de la punta de \(q = (0{,}5;\ 0{,}9;\ -0{,}8)\), amplitudes \(0{,}03\), \(0{,}03\) y \(0{,}02\) m. Error máximo \(1{,}4\times 10^{-4}\) m, error final \(6{,}0\times 10^{-5}\) m. Los dos lazos se detienen si \(|\det J| < 10^{-4}\).
 
-Con el signo de \(\sin q_3\) y la cintura que corresponde a la postura de partida, la inversa devolvió el mismo \(q\) en las posturas de prueba.
+## Opinión personal
 
-### 2.4 Cinemática diferencial y singularidades
+La escribe el autor. Preguntas, no un texto para pegar:
 
-El jacobiano es el de la posición, 3×3, el mismo criterio que `Jacobiano_3GDL.mlx`: derivar \(x\), \(y\) y \(z\) respecto de las tres variables articulares. No es el 6×4 del SCARA de la clase 4.
+- ¿Se sostiene usar la cadena rígida en un paper de eslabones que flexionan?
+- ¿Se explica por qué no se copian las ecuaciones (9)–(12)?
+- ¿En la exposición se defiende el punto a punto articular, el cartesiano, o los dos?
 
-\[
-J=\begin{bmatrix}
--\sin q_1\, A+\delta\cos q_1 & -\cos q_1\, B & -\cos q_1\, a_3\sin(q_2+q_3)\\
-\cos q_1\, A+\delta\sin q_1 & -\sin q_1\, B & -\sin q_1\, a_3\sin(q_2+q_3)\\
-0 & A & a_3\cos(q_2+q_3)
-\end{bmatrix},
-\]
+## Conclusiones
 
-con \(A=a_2\cos q_2+a_3\cos(q_2+q_3)\), \(B=a_2\sin q_2+a_3\sin(q_2+q_3)\) y \(\delta=d_2+d_3\).
+La Tabla 1 con los metros de la Tabla 2 reproduce (6)–(8). La inversa geométrica recupera la postura si se elige el codo de partida. El jacobiano detecta codo estirado, codo plegado y punta sobre el eje de \(q_1\). Las leyes de las clases 6 y 7 corren en este robot. Las masas y los resortes de la Tabla 2 no entran en esta simulación.
 
-En las longitudes de comprobación, \(\det J\) es distinto de cero en \(q=(0{,}3;\,0{,}5;\,-0{,}8)\) y cae a cero numérico con el codo estirado (\(q_3=0\)) y con el codo plegado (\(q_3=\pi\)). En la clase 4, para el RRP, el profesor lee el mismo criterio: \(\det J = -L_1 L_2 \sin\theta_2 = 0\) cuando \(\theta_2 = 0 \pm n\pi\). Con \(\theta_2 = 0\) los eslabones quedan alineados y la punta está en el borde exterior del área de trabajo. Ahí, dice, el brazo pierde un grado de libertad y no puede salir del límite. Las velocidades articulares que se van al infinito las reserva para las singularidades de adentro del área de trabajo, que en esa clase no calcula. La definición que lee, de Barrientos, es la que se usa aquí: configuración singular cuando el determinante del jacobiano es cero.
+## Recomendaciones
 
-En el antropomórfico, \(q_3 = 0\) es el análogo del borde estirado. \(q_3 = \pi\) también anula el seno del codo; es el brazo plegado, y la clase 4 no lo dibuja. El script corta el control de posición si \(|\det J|<10^{-4}\), para no integrar una velocidad articular cuando el determinante se acerca a cero. El signo \(z = -d_3\) de esa clase es del RRP. En este robot, \(z\) sigue la ecuación (5) del paper.
+1. Correr `simular_parcial` en MATLAB Online y llevar las tres figuras.
+2. Mostrar el codo estirado y la punta en el eje de \(q_1\).
+3. No copiar la matriz (2) ni las ecuaciones (9)–(12) impresas.
+4. Citar el artículo. La opinión, con palabras propias.
 
-### 2.5 Trayectoria articular
+## Referencias
 
-Entre dos puntos alcanzables se resuelve la inversa y se une con el polinomio de la clase 6, el mismo \(t_f=3\) s para las tres articulaciones, reposo a reposo. La cúbica anula la velocidad en los extremos. La quíntica anula también la aceleración. La punta se obtiene pasando cada \(q(t)\) por la directa. No es el lazo de control: es la generación de trayectoria del curso, aplicada a este robot.
+Ramzy, M. R., Hammad, S. y Maged, S. A. (2024). Kinematic and dynamic modeling of 3DOF variable stiffness links manipulator with experimental validation. *Applied Sciences, 14*(12), 5285. https://doi.org/10.3390/app14125285
 
-### 2.6 Control cinemático
+Reyes Vásquez, W. D. (2026). *Trabajo parcial: Robot antropomórfico de 3GDL*. Material de clase, ciclo 2026-2.
 
-La ley es la de la clase 7, pasada de 4 rotativas a 3. La integración sigue siendo Euler.
-
-Posición, referencia fija, \(K=8I\):
-
-\[
-\dot q = J^{+}\, K \tanh(e), \qquad e = h_d - h(q).
-\]
-
-Seguimiento, \(K=I\):
-
-\[
-\dot q = J^{+}(\dot h_d + K e).
-\]
-
-\(J^{+}\) es la pseudoinversa, como en esos archivos. Con tres articulaciones y tres coordenadas, y lejos de la singularidad, coincide con la inversa. El \(\tanh\) está en el archivo de posición de la clase y la proporcional sin saturación está comentada; aquí se dejó el \(\tanh\) en la posición y la forma lineal en el seguimiento, que es lo que esos dos scripts ejecutan.
-
-Con las longitudes de comprobación, el objetivo \((0{,}45;\,0{,}15;\,0{,}55)\) m se alcanzó desde \(q=(0{,}2;\,0{,}6;\,0{,}7)\) rad. El seguimiento parte de la inversa del primer punto de la referencia, una curva chica alrededor de \((0{,}40;\,0{,}12;\,0{,}48)\) m, para no pedirle al brazo un salto inicial. Esas curvas están en las figuras del script. Demuestran el lazo. No calibran el robot de la TU/e.
-
-## 3. Opinión personal
-
-Esta sección va en tus palabras. El enunciado lo pide así. Unas preguntas para no dejarla en blanco, no para copiarlas:
-
-- ¿Te cierra usar el método de la práctica en un robot que la práctica no modela?
-- ¿Qué te parece entregar una simulación cuya geometría es la del paper pero cuyos metros todavía no están en la tabla?
-- ¿El \(\tanh\) del control de posición te parece una decisión del curso o un parche para que la velocidad no se dispare?
-
-## 4. Conclusiones
-
-La cadena de la Tabla I, armada con la `DHL` de clase, reproduce la ecuación (5) del paper. La inversa geométrica de dos signos recupera la postura cuando se elige el codo que corresponde. El jacobiano de la posición detecta el codo estirado y el codo plegado como singularidades. El polinomio articular de la clase 6 y el control con pseudoinversa de la clase 7 se pueden correr en este RRR sin cambiarles la forma, solo la \(J\) y la directa.
-
-Eso no sustituye las longitudes del robot. Hasta leer metros en una tabla, los gráficos son una comprobación del método.
-
-## 5. Recomendaciones
-
-1. Sustituir `parametros_comprobacion.m` por los metros de la Tabla II de Kostić et al. (2004), o por una medida del manual, y volver a correr `simular_parcial` antes de entregar las figuras como resultado del robot.
-2. Incorporar lo que digan las transcripciones de las clases 2, 5 y 6. La clase 3 ya enseña la inversa del antropomórfico y dice que los trabajos suelen pedirlo; no da metros ni nombra este RRR.
-3. En la exposición, mostrar una postura con \(\det J \approx 0\) y la misma ley de control deteniéndose, para separar el método de un caso que converge.
-4. Citar el paper y el manual. El enunciado anula el trabajo si el texto se pega sin procesar y sin referencias.
-
-## 6. Referencias
-
-Kostić, D., Hensen, R. H. A., de Jager, B. y Steinbuch, M. (2001). Modeling and identification of an RRR-robot. *Proceedings of the 40th IEEE Conference on Decision and Control*, 1144–1149. https://doi.org/10.1109/CDC.2001.981039
-
-Kostić, D., Hensen, R. H. A., de Jager, B. y Steinbuch, M. (2002). Closed-form kinematic and dynamic models of an industrial-like RRR robot. *Proceedings of the 2002 IEEE International Conference on Robotics and Automation*, 1309–1314. https://doi.org/10.1109/ROBOT.2002.1014724
-
-Kostić, D., de Jager, B., Steinbuch, M. y Hensen, R. (2004). Modeling and identification for high-performance robot control: An RRR-robotic arm case study. *IEEE Transactions on Control Systems Technology, 12*(6), 904–919. https://doi.org/10.1109/TCST.2004.833641
-
-van Beek, A. M. (1998). *RRR-robot: Instruction manual* (DCT rapporten, vol. 1998.012). Technische Universiteit Eindhoven. https://pure.tue.nl/ws/files/4377712/632499.pdf
-
-Reyes Vásquez, W. D. (2026). *Trabajo parcial: Robot antropomórfico de 3GDL*. Robótica y sistemas autónomos, ciclo 2026-2.
-
-Barrientos, A. *Fundamentos de robótica*. Libro que el docente abre en la clase 4 para la definición de configuración singular. En la transcripción no dice edición ni año.
-
-Los live scripts de las clases 2, 3, 4, 6 y 7 son material del curso. En APA del informe final conviene listarlos como material de clase no publicado, con el nombre del docente y el semestre, no como si fueran un paper.
-
-## 7. Anexos
-
-Los esquemas los genera `matlab/simular_parcial.m`:
-
-1. Cadena inicial, cadena final y camino de la punta en el control de posición.
-2. Referencia y punta en el seguimiento.
-3. \(q(t)\) del polinomio cúbico y la punta al pasar por la directa.
-
-Cada figura usa las longitudes de comprobación. El título del script lo recuerda en la ventana de comandos.
+Barrientos, A. *Fundamentos de robótica*. El docente lo abre en la clase 4 para la configuración singular. La transcripción no dice edición ni año.

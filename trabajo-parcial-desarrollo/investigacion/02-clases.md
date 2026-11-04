@@ -1,6 +1,6 @@
 # Lo que sí está en las clases
 
-Se leyeron los archivos de `clase-01` a `clase-07` y las transcripciones de las clases 1, 3 y 4. No se abrió `videos/`. De las clases 2, 5 y 6 todavía no hay transcripción. Los PDF de pizarra siguen siendo imágenes. Lo que no está en una transcripción sale de los `.mlx` y de los `.m`.
+Se leyeron los archivos de `clase-01` a `clase-08` y las transcripciones de las clases 1 a 6, más `tips-trabajo-parcial-final.txt`. No se abrió `videos/`. Los PDF de pizarra siguen siendo imágenes. Lo que no está en una transcripción sale de los `.mlx` y de los `.m`. Los archivos del control cinemático están en `clase-07` y la misma copia está en `clase-08`.
 
 ## La práctica no es el antropomórfico
 
@@ -38,9 +38,33 @@ El parcial no hereda este brazo. El enunciado pide un antropomórfico, y un antr
 
 La inversa geométrica de la práctica está en `Cinematica_Inversa_2026_22.mlx`: ley del coseno, dos betas, dos thetas, y \(d_3 = p_z\). El método (dos soluciones, seno positivo y negativo) sí se reutiliza.
 
+## Clase 2, en voz
+
+`transcription/mia-ro-sis-au-02.txt` es cinemática directa del G1-171SZ, recortado a 3 grados de libertad: dos rotativas y una prismática. No habla del antropomórfico ni del parcial.
+
+Del manual y del simulador saca las longitudes. En home, con las articulaciones en cero, el brazo apunta a \(x\) y esa coordenada vale 175. Con la segunda a 90°, \(x=75\) e \(y=100\). Dice que \(L_1\) vale 75 milímetros y la segunda distancia vale 100 milímetros.
+
+La directa que escribe en la pizarra es
+
+\[
+\begin{aligned}
+x &= L_1\cos\theta_1 + L_2\cos(\theta_1+\theta_2),\\
+y &= L_1\sin\theta_1 + L_2\sin(\theta_1+\theta_2),\\
+z &= -d_3.
+\end{aligned}
+\]
+
+El menos está porque la prismática del G1 solo acepta valores negativos. El ejemplo que muestra es \(d_3=-56{,}734\), y el mundo marca el mismo número en \(z\).
+
+El algoritmo de H lo nombra Denavit–Hartenberg, dicho «Navi Hartenberg». El orden que da es rotación en \(z\), traslación en \(z\), traslación en \(x\) y rotación en \(x\). La tabla que llena, con las articulaciones en cero, es \(\theta_1,0,L_1,0\), luego \(\theta_2,0,L_2,0\), y en la prismática el ángulo fijo en 0, el desplazamiento \(d_3\) y longitud 0. Al multiplicar las tres matrices, \(x\) e \(y\) coinciden con la pizarra y \(z\) sale \(+d_3\). Dice que, para que se parezca al programa, ahí se pone \(-d_3\).
+
+Los rangos los lee del manual y se corrige. La primera articulación queda de \(-135^\circ\) a \(135^\circ\). La segunda la empieza («menos 140») y no la deja cerrada. \(d_3\), después de la corrección, va de \(-100\) a \(0\).
+
+Centros de masa e inercias no se calculan en esta clase. Dice que los tiene que traer el paper que investiguen, o un CAD. Los puntos singulares los nombra y los deja para la cinemática diferencial. El control cinemático lo anuncia como interpoladores en el tiempo y una ley que alimenta al motor; la ley no la escribe.
+
 ## Clase 3, en voz
 
-`transcription/mia-ro-sis-au-03.txt` es cinemática inversa. Empieza por el SCARA G1, rotativa, rotativa y prismática, y después pasa a un antropomórfico de 3 grados de libertad. Al cierre dice que en los trabajos suele pedir antropomórficos. No nombra el robot de Eindhoven ni da sus metros. Los 75 y los 100, que suman 175, siguen siendo del G1. No dice la unidad.
+`transcription/mia-ro-sis-au-03.txt` es cinemática inversa. Empieza por el SCARA G1, rotativa, rotativa y prismática, y después pasa a un antropomórfico de 3 grados de libertad. Al cierre dice que en los trabajos suele pedir antropomórficos. No da los metros de ese ejemplo. Los 75 y los 100, que suman 175, siguen siendo del G1. No dice la unidad.
 
 En el SCARA, si la trama raíz coincide con la del manual, \(d_3 = p_z\). El manual del G1 arranca en cero y solo acepta desplazamiento negativo: un valor positivo de la prismática da error de rango.
 
@@ -54,7 +78,7 @@ En la diapositiva del antropomórfico la trama raíz está arriba y la longitud 
 
 y \(\theta_2\), \(\theta_3\) salen del mismo triángulo del SCARA, ahora en el plano \(R\)–\(z\). Si la trama está abajo, aparece una vertical \(L_1\) y los eslabones del brazo pasan a llamarse \(L_2\) y \(L_3\). La altura que usa es \(p_z - L_1\). En el tablero escribe \(D\) mal y lo corrige a \(R^2 + p_z^2\); la transcripción no deja esa expresión ya limpia, así que no se copia al código.
 
-Ese \(\theta_1 = \operatorname{atan2}(p_y, p_x)\) es el caso sin offset lateral. La Tabla I de Kostić tiene \(d_2\) y \(d_3\), así que ahí \(\theta_1\) no es ese arco tangente. También pide mirar, en el paper que se elija, el sentido de \(\theta_1\) y si \(z_0\) está arriba o abajo: no son el mismo robot dado vuelta.
+Ese \(\theta_1 = \operatorname{atan2}(p_y, p_x)\) es el caso sin offset lateral. También pide mirar, en el paper que se elija, el sentido de \(\theta_1\) y si \(z_0\) está arriba o abajo: no son el mismo robot dado vuelta. En Ramzy et al. (2024) \(d_2 = d_3 = 0\) y \(p_z\) suma \(l_1\), así que \(z_0\) apunta hacia arriba y esa fórmula de \(\theta_1\) sí corresponde.
 
 ## Control y trayectorias que sí se reutilizan
 

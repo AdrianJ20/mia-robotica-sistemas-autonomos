@@ -1,8 +1,8 @@
 # Trabajo parcial — desarrollo
 
-Simulación del robot antropomórfico de 3 grados de libertad que pide `trabajo-parcial/Trabajo_Parcial_2026_2.pdf`: cinemática directa, inversa, diferencial, singularidades y control cinemático, con un modelo real.
+Simulación del antropomórfico de 3 grados de libertad de Ramzy, Hammad y Maged (2024): cinemática directa, inversa, diferencial, singularidades y control cinemático. El PDF está en `fuentes/applsci-14-05285-v2.pdf`.
 
-Esta carpeta no reemplaza el enunciado. El informe para entregar es el borrador de `informe/`. Todavía faltan tu nombre en la carátula, la opinión personal con tus palabras, y lo que digan las transcripciones de las clases 2 a 6.
+Esta carpeta no reemplaza el enunciado. El informe para entregar es `informe/informe.pdf`. Faltan el nombre en la carátula, el logotipo de la UNI, el nombre oficial de la maestría y la opinión personal con tus palabras.
 
 ## Cómo correrlo
 
@@ -14,17 +14,15 @@ simular_parcial
 
 No hace falta Robotics System Toolbox. El archivo imprime los errores y abre tres figuras.
 
-Los metros de `parametros_comprobacion.m` no son los del robot. `a1 = 0` y los tres twist sí salen de la Tabla I de Kostić et al. (2002). El resto está ahí solo para que la cuenta cierre. Cuando aparezcan los metros, se cambia ese archivo y no las fórmulas.
+Los largos son los de la Tabla 2: \(l_1 = 0{,}04\) m, \(l_2 = 0{,}29\) m, \(l_3 = 0{,}240\) m. Masas, centros de masa, momentos, resortes y amortiguadores de esa tabla no entran en este script.
 
 ## Qué hay
 
 | Carpeta | Contenido |
 | --- | --- |
-| `investigacion/` | Lectura del enunciado, de las clases y del modelo |
+| `investigacion/` | Enunciado, clases, modelo y lo que el docente pide |
 | `matlab/` | Simulación |
-| `informe/` | Borrador con la estructura que pide el enunciado |
-| `fuentes/` | Copia de autor del paper de cinemática (ICRA 2002) |
+| `informe/` | Borrador y PDF |
+| `fuentes/` | El artículo y `resumen-ramzy-2024.md` |
 
-No se usó `videos/`. Transcripciones leídas: las clases 1, 3 y 4. Faltan las de las clases 2, 5 y 6.
-
-El informe compilado está en `informe/informe.pdf`. El resumen del artículo de cinemática está en `fuentes/resumen-kostic-2002.md`.
+No se usó `videos/`. Las transcripciones de las clases 1 a 6 y `tips-trabajo-parcial-final.txt` están resumidas, en lo que toca al encargo, en `investigacion/05-como-pide-el-profesor.md`.

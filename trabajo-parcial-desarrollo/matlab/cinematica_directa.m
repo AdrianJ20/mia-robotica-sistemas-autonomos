@@ -1,10 +1,10 @@
 function [xyz, T, origenes] = cinematica_directa(q, p)
-% CINEMATICA_DIRECTA  Punta del RRR antropomórfico.
-% Cadena de la Tabla I de Kostić et al. (ICRA 2002), armada con DHL.
-% La posición coincide con la ecuación (5) de ese paper:
-%   x = cos(q1)*(a3*cos(q2+q3) + a2*cos(q2)) + (d2+d3)*sin(q1)
-%   y = sin(q1)*(a3*cos(q2+q3) + a2*cos(q2)) - (d2+d3)*cos(q1)
-%   z = a3*sin(q2+q3) + a2*sin(q2) + d1
+% CINEMATICA_DIRECTA  Punta del antropomórfico de 3 rotativas.
+% Cadena de la Tabla 1 de Ramzy et al. (2024), armada con DHL.
+% La posición es la de las ecuaciones (6)-(8) de ese paper:
+%   x = cos(q1)*(l2*cos(q2) + l3*cos(q2+q3))
+%   y = sin(q1)*(l2*cos(q2) + l3*cos(q2+q3))
+%   z = l1 + l2*sin(q2) + l3*sin(q2+q3)
 
 q = q(:);
 M01 = dhl(q(1), p.d1, p.a1, p.alpha(1));
