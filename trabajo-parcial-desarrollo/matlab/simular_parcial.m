@@ -229,7 +229,7 @@ axis equal
 xlabel('x (m)')
 ylabel('y (m)')
 zlabel('z (m)')
-title('Directa: base, articulaciones y punta en q de prueba')
+title('Cadena en q de prueba')
 
 figs(end + 1) = figure('Name', 'Espacio de trabajo');
 subplot(1, 2, 1)
@@ -239,14 +239,14 @@ axis equal
 xlabel('x (m)')
 ylabel('y (m)')
 zlabel('z (m)')
-title('Espacio de trabajo 3D (comparar con Fig. 4)')
+title('Espacio de trabajo 3D')
 subplot(1, 2, 2)
 plot(P_corte(2, :), P_corte(3, :), 'b+', 'MarkerSize', 3)
 grid on
 axis equal
 xlabel('y (m)')
 ylabel('z (m)')
-title('Corte x = 0 (comparar con Fig. 5)')
+title('Corte x = 0')
 
 figs(end + 1) = figure('Name', 'Singularidades');
 subplot(1, 2, 1)
@@ -256,13 +256,13 @@ contour(rad2deg(Q2m), rad2deg(Q3m), detJm, [0 0], 'r', 'LineWidth', 2)
 colorbar
 xlabel('q_2 (°)')
 ylabel('q_3 (°)')
-title('det J(q_2, q_3); en rojo det J = 0')
+title('det J (rojo: det J = 0)')
 subplot(1, 2, 2)
 plot(t_dif, manip_dif)
 grid on
 xlabel('t (s)')
 ylabel('|det J|')
-title('Manipulabilidad sobre la trayectoria quíntica')
+title('Manipulabilidad')
 
 figs(end + 1) = figure('Name', 'Cinemática diferencial');
 plot(t_dif, v_jac', 'LineWidth', 1.5)
@@ -271,7 +271,7 @@ plot(t_dif, v_num', 'k--')
 grid on
 xlabel('t (s)')
 ylabel('v (m/s)')
-title('Velocidad de la punta: J(q)·qp (color) y derivada numérica (negro)')
+title('Velocidad: J·qp y derivada numérica')
 legend('v_x', 'v_y', 'v_z', 'Location', 'best')
 
 figs(end + 1) = figure('Name', 'Validación Tabla 3');
@@ -294,7 +294,7 @@ grid on
 xlabel('Postura de la Tabla 3')
 ylabel('Error (mm)')
 legend('vs experimental', 'vs teórica del artículo', 'Location', 'best')
-title('Error de posición por postura')
+title('Error por postura')
 
 figs(end + 1) = figure('Name', 'Error de control');
 subplot(2, 1, 1)
@@ -324,7 +324,7 @@ axis equal
 xlabel('x (m)')
 ylabel('y (m)')
 zlabel('z (m)')
-title('Posición: cadena inicial, cadena final y camino de la punta')
+title('Control de posición')
 legend('punta', 'inicio', 'final', 'objetivo', 'Location', 'best')
 
 figs(end + 1) = figure('Name', 'Seguimiento');
@@ -336,7 +336,7 @@ axis equal
 xlabel('x (m)')
 ylabel('y (m)')
 zlabel('z (m)')
-title('Seguimiento: referencia punteada, punta en azul')
+title('Seguimiento cartesiano')
 legend('referencia', 'punta', 'Location', 'best')
 
 figs(end + 1) = figure('Name', 'Interpolador cúbico');
@@ -344,7 +344,7 @@ subplot(2, 1, 1)
 plot(t_pol, q_cub')
 grid on
 ylabel('q (rad)')
-title('Articulaciones, polinomio cúbico de la clase 6')
+title('Polinomio cúbico q(t)')
 legend('q1', 'q2', 'q3')
 subplot(2, 1, 2)
 plot3(punta_cub(1, :), punta_cub(2, :), punta_cub(3, :), 'b')
@@ -353,7 +353,7 @@ axis equal
 xlabel('x (m)')
 ylabel('y (m)')
 zlabel('z (m)')
-title('Punta al pasar el polinomio por la directa')
+title('Trayectoria de la punta')
 
 fprintf('\nOrígenes de la cadena en q de prueba (columnas: base, 1, 2, punta):\n')
 disp(origenes)
